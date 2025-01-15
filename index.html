@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ピックルマッチメイカー v1.0.8</title>
+    <title>ピックルマッチメイカー v1.0.9</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
         .section { margin-bottom: 20px; }
@@ -12,7 +12,7 @@
         .court { padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 1.5em; }
         .court.empty { background: #d9fdd3; } /* 薄緑 */
         .court.occupied { background: #fdd9d9; } /* 薄い赤 */
-        .court button { margin-left: 10px; font-size: 1em; }
+        .court button { margin-left: 5px; font-size: 1em; }
         .participant { padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; background: #f9f9f9; }
         .participant-number { font-size: 1em; font-weight: bold; color: #333; margin-right: 10px; }
         .participant-info { display: flex; align-items: center; justify-content: space-between; }
@@ -60,7 +60,7 @@
     <h2>試合待ちリスト</h2>
     <div id="waiting-list" class="list"></div>
 
-    <center>v1.0.8</center>
+    <center>v1.0.9</center>
     
     <script>
         const actionButton = document.getElementById('action-button');
@@ -157,12 +157,12 @@
                 if (court.status === '空き') {
                     // 空き状態
                     courtElement.innerHTML = `
-                        コート${court.id}　空き　
+                        コート${court.id}　空き
+                        <br>
                         <button onclick="startMatch('${court.id}')">試合開始</button>
                     `;
                 } else {
                     // 試合中
-                    // ★ プレイヤーの表示を「1,2 vs 3,4」のように整形
                     let displayText = '';
                     if (court.players.length === 4) {
                         // 4名いる場合のみ "A,B vs C,D" の形にする
@@ -175,6 +175,7 @@
 
                     courtElement.innerHTML = `
                         コート${court.id}　${displayText}
+                        <br>
                         <button onclick="endMatch('${court.id}')">試合終了</button>
                         <button onclick="cancelMatch('${court.id}')">試合中止</button>
                     `;
