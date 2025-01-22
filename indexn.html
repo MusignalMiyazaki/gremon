@@ -1,269 +1,431 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ぐれもんマッチメイカー - 名前管理版</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-        .section { margin-bottom: 20px; }
-        .button { margin-top: 10px; padding: 10px 20px; font-size: 16px; }
-        .list, .courts { margin-top: 10px; }
-        .court { padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 1.5em; }
-        .court.empty { background: #d9fdd3; } /* 薄緑 */
-        .court.occupied { background: #fdd9d9; } /* 薄い赤 */
-        .court button { margin-left: 5px; font-size: 1em; }
-        .participant { padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; background: #f9f9f9; }
-        .participant-name { font-size: 1em; font-weight: bold; color: #333; margin-right: 10px; }
-        select { font-size: 1.5em; padding: 5px; }
-        @media (max-width: 600px) {
-            .button { width: 100%; font-size: 18px; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>マッチメイカーβ</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+      line-height: 1.6;
+    }
+    h2 {
+      margin-top: 0;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+    }
+    .left, .right {
+      flex: 1;
+      min-width: 300px;
+    }
+    .section { margin-bottom: 20px; }
+    .button { margin: 5px; padding: 6px 12px; font-size: 14px; }
+    select { font-size: 16px; padding: 5px; }
+
+    /* コート表示 */
+    .courts .court {
+      padding: 5px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1em;
+    }
+    .court.empty { background: #d9fdd3; }    /* 薄緑 */
+    .court.occupied { background: #fdd9d9; } /* 薄い赤 */
+    .court button { margin-left: 5px; font-size: 1em; }
+
+    /* A,B vs C,D を大きく表示するクラス */
+    .match-display {
+      font-size: 2.2em;   /* 必要に応じて調整 */
+      font-weight: bold;  /* 太字にする場合 */
+    }
+
+    /* テーブル表示（試合待ちリスト） */
+    #waitingTable {
+      width: 100%;
+      border-collapse: collapse; 
+    }
+    #waitingTable th, #waitingTable td {
+      border: none; 
+      padding: 4px 8px;
+      vertical-align: middle;
+    }
+    #waitingTable th {
+      text-align: left;
+      font-weight: bold;
+    }
+    .delete-button { margin-left: 8px; }
+  </style>
 </head>
 <body>
-    <center><h2>ぐれもんマッチメイカー - 名前管理版</h2></center>
+  <center><h2>マッチメイカーβ</h2></center>
 
-    <!-- コート数の選択 -->
-    <div class="section">
-        <label for="court-count">コート数:</label>
-        <select id="court-count">
-            <option value="">選択してください</option>
-            <!-- 1から8までの選択肢を手動 or 動的に -->
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-        </select>
+  <div class="container">
+    <!-- 右半分 -->
+    <div class="right">
+      <h2>試合待ちリスト</h2>
+      <!-- 参加者追加フォーム -->
+      <div class="section">
+        <input type="text" id="nameInput" placeholder="参加者名">
+        <button id="addButton" class="button">参加者追加</button>
+      </div>
+
+      <!-- 参加者リストをテーブル表示 -->
+      <table id="waitingTable">
+        <thead>
+          <tr>
+            <th>名前</th>
+            <th>試合回数</th>
+            <th>参加</th>
+            <th>削除</th>
+          </tr>
+        </thead>
+        <tbody id="waitingTbody"></tbody>
+        <!-- tfootにリセットボタンを配置 -->
+        <tfoot>
+          <tr>
+            <td colspan="4">
+              <button id="resetMatchesButton" class="button">試合回数をリセット</button>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
     </div>
 
-    <button id="action-button" class="button">試合を始める</button>
+    <!-- 左半分 -->
+    <div class="left">
+      <!-- コートリスト -->
+      <h2>コートリスト</h2>
+      <!-- コート数設定 -->
+      <div class="section">
+        <label for="courtCount">コート数:</label>
+        <select id="courtCount">
+          <option value="">選択してください</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+        </select>
+        <button id="initCourtButton" class="button">コート数決定</button>
+      </div>
+      
+      <div id="courtInfo" class="courts"></div>
+    </div>
+  </div>
 
-    <h2>コートリスト</h2>
-    <div id="court-info" class="section courts"></div>
+  <center>v2.2.0</center>
 
-    <h2>試合待ちリスト</h2>
-    <div id="waiting-list" class="list"></div>
+  <script>
+    /*
+      データ構造:
+      participants = [
+        { name: "Alice", matches: 0, resting: false, isParticipating: true },
+        ...
+      ]
 
-    <center>v2.0.0</center>
-    
-    <script>
-        let participants = [];  // { name, matches, resting, checked }
-        let courts = [];        // { id, status, players }
+      courts = [
+        { id: "A", status: "空き" or "試合中", players: [p1, p2, p3, p4] },
+        ...
+      ]
+    */
+    let participants = [];
+    let courts = [];
 
-        const courtCountSelect = document.getElementById('court-count');
-        const actionButton = document.getElementById('action-button');
-        const courtInfo = document.getElementById('court-info');
-        const waitingList = document.getElementById('waiting-list');
+    // HTMLエレメントの取得
+    const nameInput = document.getElementById('nameInput');
+    const addButton = document.getElementById('addButton');
+    const initCourtButton = document.getElementById('initCourtButton');
+    const courtCountSelect = document.getElementById('courtCount');
+    const courtInfo = document.getElementById('courtInfo');
+    const waitingTbody = document.getElementById('waitingTbody');
+    const resetMatchesButton = document.getElementById('resetMatchesButton');
 
-        // ページ読み込み時に member.txt を読み込む
-        document.addEventListener('DOMContentLoaded', () => {
-            loadMembers();
+    //-------------------------------------------------------
+    // LocalStorage 保存・読込
+    //-------------------------------------------------------
+    function saveState() {
+      localStorage.setItem("guremon_participants", JSON.stringify(participants));
+      const courtsData = courts.map(c => ({
+        id: c.id,
+        status: c.status,
+        playerNames: c.players.map(p => p.name)
+      }));
+      localStorage.setItem("guremon_courts", JSON.stringify(courtsData));
+    }
+
+    function loadState() {
+      const pData = localStorage.getItem("guremon_participants");
+      if (pData) {
+        participants = JSON.parse(pData);
+      } else {
+        participants = [];
+      }
+      const cData = localStorage.getItem("guremon_courts");
+      if (cData) {
+        const courtsData = JSON.parse(cData);
+        courts = courtsData.map(cd => {
+          const matchedPlayers = cd.playerNames
+            .map(name => participants.find(p => p.name === name))
+            .filter(Boolean);
+          if (cd.status === "試合中") {
+            matchedPlayers.forEach(p => p.resting = true);
+          }
+          return {
+            id: cd.id,
+            status: cd.status,
+            players: matchedPlayers
+          };
+        });
+      } else {
+        courts = [];
+      }
+    }
+
+    // ページ読み込み時
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      updateDisplay();
+    });
+
+    //-------------------------------------------------------
+    // UI操作
+    //-------------------------------------------------------
+    // 参加者追加
+    addButton.addEventListener('click', () => {
+      const name = nameInput.value.trim();
+      if (!name) return;
+      participants.push({
+        name,
+        matches: 0,
+        resting: false,
+        isParticipating: true
+      });
+      saveState();
+      updateDisplay();
+      nameInput.value = "";
+    });
+
+    // コート初期化
+    initCourtButton.addEventListener('click', () => {
+      const n = parseInt(courtCountSelect.value);
+      if (!n) {
+        alert("コート数を選択してください。");
+        return;
+      }
+      // 試合中のコートがあるなら全て中止扱い
+      if (courts.some(c => c.status === '試合中')) {
+        if(!confirm("コートに参加者がいます。初期化しますか？\n(試合は中止され、全員待ちリストに戻ります)")) {
+          return;
+        }
+        courts.forEach(c => {
+          c.players.forEach(p => p.resting = false);
+        });
+      }
+      courts = Array.from({ length: n }, (_, i) => ({
+        id: String.fromCharCode(65 + i),
+        status: '空き',
+        players: []
+      }));
+      saveState();
+      updateDisplay();
+    });
+
+    // 試合回数リセット
+    resetMatchesButton.addEventListener('click', () => {
+      if (!confirm("全員の試合回数をリセットします。よろしいですか？")) return;
+      participants.forEach(p => p.matches = 0);
+      saveState();
+      updateDisplay();
+      alert("全員の試合回数をリセットしました。");
+    });
+
+    //-------------------------------------------------------
+    // 画面表示を更新
+    //-------------------------------------------------------
+    function updateDisplay() {
+      // 待ちリスト（テーブル）表示
+      waitingTbody.innerHTML = "";
+      participants
+        .filter(p => p.resting === false)
+        .forEach(p => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${p.name}</td>
+            <td>${p.matches}</td>
+            <td>
+              <input type="checkbox"
+                ${p.isParticipating ? 'checked' : ''}
+                onchange="toggleParticipation('${p.name}')">
+            </td>
+            <td>
+              <button class="delete-button" onclick="deleteParticipant('${p.name}')">削除</button>
+            </td>
+          `;
+          waitingTbody.appendChild(tr);
         });
 
-        // member.txt を読み込む
-        function loadMembers() {
-            // fetch() はローカルの file:// では動かないことがあります
-            // 同じフォルダにある member.txt を読み込む
-            fetch('member.txt')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('ネットワークエラー: ' + response.status);
-                    }
-                    return response.text();
-                })
-                .then(text => {
-                    // 1行ごとに分割し、空行を除外
-                    const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => line);
-                    
-                    // participants を作成
-                    participants = lines.map(line => ({
-                        name: line,
-                        matches: 0,
-                        resting: false,
-                        checked: false
-                    }));
-                })
-                .catch(error => {
-                    console.error('member.txt の読み込みに失敗:', error);
-                    alert('member.txt を読み込めませんでした。ローカルサーバーで実行するか、ファイルパスを確認してください。');
-                });
+      // コート表示
+      courtInfo.innerHTML = "";
+      courts.forEach(court => {
+        const div = document.createElement('div');
+        div.className = `court ${court.status === '空き' ? 'empty' : 'occupied'}`;
+
+        if (court.status === '空き') {
+          div.innerHTML = `
+            コート${court.id}　空き
+            <br>
+            <button onclick="startMatch('${court.id}')">試合開始</button>
+          `;
+        } else {
+          let displayText = "";
+          if (court.players.length === 4) {
+            const [p1, p2, p3, p4] = court.players;
+            /* 
+               match-display クラスを付けてフォントサイズUP 
+               [p1,p2 vs p3,p4]の形式で表示 
+            */
+            displayText = `<span class="match-display">${p1.name}, ${p2.name} vs ${p3.name}, ${p4.name}</span>`;
+          } else {
+            // 4人以外ならカンマ区切り
+            displayText = court.players.map(p => p.name).join(", ");
+          }
+          div.innerHTML = `
+            コート${court.id}　${displayText}
+            <br>
+            <button onclick="endMatch('${court.id}')">試合終了</button>
+            <button onclick="cancelMatch('${court.id}')">試合中止</button>
+          `;
         }
+        courtInfo.appendChild(div);
+      });
+    }
 
-        // 「試合を始める」ボタン
-        actionButton.addEventListener('click', () => {
-            const courtCount = parseInt(courtCountSelect.value);
-            if (!courtCount || participants.length < 4) {
-                alert("コート数を選択し、または参加者が最低4名以上いることを確認してください。");
-                return;
-            }
-            initializeCourts(courtCount);
-        });
+    //-------------------------------------------------------
+    // ボタン操作用 関数
+    //-------------------------------------------------------
+    window.toggleParticipation = function(name) {
+      const target = participants.find(p => p.name === name);
+      if (target) {
+        target.isParticipating = !target.isParticipating;
+        saveState();
+        updateDisplay();
+      }
+    };
 
-        // コートを初期化
-        function initializeCourts(courtCount) {
-            courts = Array.from({ length: courtCount }, (_, i) => ({
-                id: String.fromCharCode(65 + i), // A, B, C ...
-                status: '空き',
-                players: []
-            }));
+    window.deleteParticipant = function(name) {
+      if (!confirm(`${name} を削除しますか？`)) return;
+      const idx = participants.findIndex(p => p.name === name);
+      if (idx >= 0) {
+        participants.splice(idx, 1);
+        saveState();
+        updateDisplay();
+      }
+    };
 
-            updateDisplay();
-        }
 
-        // 画面表示を更新
-        function updateDisplay() {
-            // コート表示
-            courtInfo.innerHTML = '';
-            courts.forEach(court => {
-                const courtElement = document.createElement('div');
-                courtElement.className = `court ${court.status === '空き' ? 'empty' : 'occupied'}`;
+	window.startMatch = function(courtId) {
+		const court = courts.find(c => c.id === courtId);
+		if (!court || court.status !== '空き') return;
+		
+		// 参加可能なプレイヤー
+		const validPlayers = participants.filter(p => p.isParticipating && !p.resting);
+		if (validPlayers.length < 4) {
+			alert("参加可能な人が4人未満です。");
+			return;
+		}
+		
+		// 全員を試合回数が小さい順にソート
+		const sorted = [...validPlayers].sort((a, b) => a.matches - b.matches);
+		
+		// 最小試合回数を取得
+		const minMatches = sorted[0].matches;
+		// 試合回数が minMatches の人だけを抽出
+		const sameGroup = sorted.filter(p => p.matches === minMatches);
+		
+		// もし sameGroup が4名未満なら、次に少ない試合回数の人も追加していく、などのロジックも可能
+		// 今回は「同じ最小試合回数が4人以上いるならそこから抽選する」例として実装
+		if (sameGroup.length < 4) {
+			// sameGroupが4人に満たない場合、次の試合回数グループを追加
+			let need = 4 - sameGroup.length;
+			let index = sameGroup.length;
+			// 同じ minMatches が終わった後の要素(= 次に多い match)を追加
+			for (let i = 0; i < sorted.length && need > 0; i++) {
+				// already in sameGroup はスキップ
+				if (!sameGroup.includes(sorted[i])) {
+					sameGroup.push(sorted[i]);
+					need--;
+				}
+			}
+		}
+		
+		// 同じ試合回数が8人など多数いた場合でもシャッフルして4人を選ぶ
+		shuffleArray(sameGroup);
+		
+		// 先頭4人を選ぶ
+		const selected = sameGroup.slice(0, 4);
+		
+		// コートに入る
+		selected.forEach(p => p.resting = true);
+		court.status = "試合中";
+		court.players = selected;
+		
+		saveState();
+		updateDisplay();
+	};
+	
+	// フィッシャー–イェーツのシャッフル例
+	function shuffleArray(array) {
+		for (let i = array.length - 1; i > 0; i--) {
+			const r = Math.floor(Math.random() * (i + 1));
+			[array[i], array[r]] = [array[r], array[i]];
+		}
+	}
 
-                if (court.status === '空き') {
-                    courtElement.innerHTML = `
-                        コート${court.id}　空き
-                        <br>
-                        <button onclick="startMatch('${court.id}')">試合開始</button>
-                    `;
-                } else {
-                    // 試合中の場合、プレイヤー名を "A,B vs C,D" 表示 (4人想定)
-                    let displayText = '';
-                    if (court.players.length === 4) {
-                        const [p1, p2, p3, p4] = court.players;
-                        displayText = `${p1.name}, ${p2.name} vs ${p3.name}, ${p4.name}`;
-                    } else {
-                        // 万一4人以外ならカンマ区切り
-                        displayText = court.players.map(p => p.name).join(', ');
-                    }
+    window.endMatch = function(courtId) {
+      const court = courts.find(c => c.id === courtId);
+      if (!court || court.status !== '試合中') return;
 
-                    courtElement.innerHTML = `
-                        コート${court.id}　${displayText}
-                        <br>
-                        <button onclick="endMatch('${court.id}')">試合終了</button>
-                        <button onclick="cancelMatch('${court.id}')">試合中止</button>
-                    `;
-                }
-                courtInfo.appendChild(courtElement);
-            });
+      if (!confirm("試合を終了します。よろしいですか？")) return;
 
-            // 待ちリスト表示
-            waitingList.innerHTML = '';
-            participants
-                .filter(p => !p.resting) // resting=false のみ待ちリストに表示
-                .forEach(p => {
-                    const participantElement = document.createElement('div');
-                    participantElement.className = 'participant';
-                    participantElement.innerHTML = `
-                        <span class="participant-name">
-                            ${p.name}：試合回数 ${p.matches}
-                        </span>
-                        休憩中→<input type="checkbox" 
-                            ${p.checked ? 'checked' : ''} 
-                            onchange="toggleCheckbox('${p.name}')">
-                    `;
-                    waitingList.appendChild(participantElement);
-                });
-        }
+      court.players.forEach(p => {
+        p.matches++;
+        p.resting = false;
+      });
+      court.status = '空き';
+      court.players = [];
 
-        // 休憩チェックボックス切り替え
-        function toggleCheckbox(participantName) {
-            const participant = participants.find(p => p.name === participantName);
-            if (participant) {
-                participant.checked = !participant.checked;
-            }
-        }
+      saveState();
+      updateDisplay();
+    };
 
-        // 試合開始
-        window.startMatch = function(courtId) {
-            const court = courts.find(c => c.id === courtId);
-            if (!court || court.status !== '空き') return;
+    window.cancelMatch = function(courtId) {
+      const court = courts.find(c => c.id === courtId);
+      if (!court || court.status !== '試合中') return;
 
-            // 休憩中でなく、チェックが外れている人のみ対象
-            const validPlayers = participants.filter(p => !p.resting && !p.checked);
+      if (!confirm("試合を中止します。よろしいですか？")) return;
 
-            // 試合回数ごとにグループ化
-            const grouped = validPlayers.reduce((acc, p) => {
-                acc[p.matches] = acc[p.matches] || [];
-                acc[p.matches].push(p);
-                return acc;
-            }, {});
+      court.players.forEach(p => {
+        p.resting = false;
+      });
+      court.status = '空き';
+      court.players = [];
 
-            // 試合回数が少ない順に4名を選択
-            const selected = [];
-            Object.keys(grouped)
-                  .map(num => parseInt(num))
-                  .sort((a, b) => a - b)
-                  .forEach(key => {
-                    while (grouped[key].length > 0 && selected.length < 4) {
-                        const index = Math.floor(Math.random() * grouped[key].length);
-                        selected.push(grouped[key].splice(index, 1)[0]);
-                    }
-                  });
+      saveState();
+      updateDisplay();
+    };
 
-            if (selected.length < 4) {
-                alert('参加者が足りません。');
-                return;
-            }
-
-            // 試合に入る人を resting=true に
-            selected.forEach(p => p.resting = true);
-
-            // コートにセット
-            court.status = '試合中';
-            court.players = selected;
-
-            updateDisplay();
-        };
-
-        // 試合終了
-        window.endMatch = function(courtId) {
-            const court = courts.find(c => c.id === courtId);
-            if (!court || court.status !== '試合中') return;
-
-            if (!confirm("試合を終了します。よろしいですか？")) {
-                return;
-            }
-
-            court.players.forEach(p => {
-                p.matches++;
-                p.resting = false;
-            });
-            court.status = '空き';
-            court.players = [];
-
-            alert("試合を終了しました。");
-            updateDisplay();
-        };
-
-        // 試合中止
-        window.cancelMatch = function(courtId) {
-            const court = courts.find(c => c.id === courtId);
-            if (!court || court.status !== '試合中') return;
-
-            if (!confirm("試合を中止します。よろしいですか？")) {
-                return;
-            }
-
-            court.players.forEach(p => {
-                p.resting = false;
-            });
-            court.status = '空き';
-            court.players = [];
-
-            alert("試合を中止しました。");
-            updateDisplay();
-        };
-
-        // ページ離脱警告
-        window.addEventListener("beforeunload", function (event) {
-            const message = "このページを離れようとしています。変更内容が失われる可能性があります。";
-            event.returnValue = message;
-            return message;
-        });
-    </script>
+    // ページ離脱警告
+    window.addEventListener("beforeunload", event => {
+      const message = "このページを離れようとしています。変更内容が失われる可能性があります。";
+      event.returnValue = message;
+      return message;
+    });
+  </script>
 </body>
 </html>
