@@ -12,35 +12,37 @@
     h2 {
       margin-top: 0;
     }
+    /* 左右2カラム + 真ん中に仕切り線（1px） */
     .container {
-      display: flex;
-      gap: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr; /* 左 中央線 右 */
+      gap: 0; /* 仕切り線のみ */
+      min-height: 80vh;
     }
-    .left, .right {
-      flex: 1;
-      min-width: 300px;
+    .left {
+      padding-right: 10px;
+    }
+    .divider {
+      width: 1px;
+      background: #ccc; /* 中央線 */
+    }
+    .right {
+      padding-left: 10px;
     }
     .section { margin-bottom: 20px; }
-    .button { margin: 5px; padding: 6px 12px; font-size: 14px; }
+
+    /* ボタン大きめ */
+    .button {
+      margin: 5px;
+      padding: 6px 12px;
+      font-size: 14px;
+    }
+    .button-large {
+      font-size: 35px;  /* さらに大きく */
+      padding: 0px 5px;
+    }
+
     select { font-size: 16px; padding: 5px; }
-
-    /* コート表示 */
-    .courts .court {
-      padding: 5px;
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 1em;
-    }
-    .court.empty { background: #d9fdd3; }    /* 薄緑 */
-    .court.occupied { background: #fdd9d9; } /* 薄い赤 */
-    .court button { margin-left: 5px; font-size: 1em; }
-
-    /* A,B vs C,D を大きく表示するクラス */
-    .match-display {
-      font-size: 2.2em;   /* 必要に応じて調整 */
-      font-weight: bold;  /* 太字にする場合 */
-    }
 
     /* テーブル表示（試合待ちリスト） */
     #waitingTable {
@@ -51,26 +53,49 @@
       border: none; 
       padding: 4px 8px;
       vertical-align: middle;
+      text-align: center; /* すべて中央寄せ */
     }
     #waitingTable th {
-      text-align: left;
       font-weight: bold;
     }
     .delete-button { margin-left: 8px; }
+
+    /* コート表示 */
+    .courts .court {
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      padding: 10px;
+      text-align: center; /* 中央寄せ */
+    }
+    .court-name {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .court-players {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .court.empty { background: #d9fdd3; }    /* 薄緑 */
+    .court.occupied { background: #fdd9d9; } /* 薄い赤 */
+
   </style>
 </head>
 <body>
   <center><h2>マッチメイカーβ</h2></center>
 
   <div class="container">
-    <!-- 右半分 -->
-    <div class="right">
+    <!-- 左半分（試合待ちリスト） -->
+    <div class="left">
       <h2>試合待ちリスト</h2>
       <!-- 参加者追加フォーム -->
-      <div class="section">
-        <input type="text" id="nameInput" placeholder="参加者名">
-        <button id="addButton" class="button">参加者追加</button>
-      </div>
+<div class="section">
+  <input type="text" id="nameInput" placeholder="参加者名"
+         style="font-size:35px; padding:5px;" size=6>
+  <button id="addButton" class="button-large">参加者追加</button>
+</div>
 
       <!-- 参加者リストをテーブル表示 -->
       <table id="waitingTable">
@@ -83,20 +108,32 @@
           </tr>
         </thead>
         <tbody id="waitingTbody"></tbody>
-        <!-- tfootにリセットボタンを配置 -->
         <tfoot>
           <tr>
-            <td colspan="4">
-              <button id="resetMatchesButton" class="button">試合回数をリセット</button>
+            <!-- 参加者 x名 -->
+            <td id="participantCountCell"></td>
+            <!-- 試合回数リセット -->
+            <td>
+              <button id="resetMatchesButton" class="button">試合回数リセット</button>
+            </td>
+            <!-- 全てクリア -->
+            <td>
+              <button id="clearAllButton" class="button">全てクリア</button>
+            </td>
+            <!-- 全て削除 -->
+            <td>
+              <button id="deleteAllButton" class="button">全て削除</button>
             </td>
           </tr>
         </tfoot>
       </table>
     </div>
 
-    <!-- 左半分 -->
-    <div class="left">
-      <!-- コートリスト -->
+    <!-- 中央仕切り線 -->
+    <div class="divider"></div>
+
+    <!-- 右半分（コートリスト） -->
+    <div class="right">
       <h2>コートリスト</h2>
       <!-- コート数設定 -->
       <div class="section">
@@ -114,37 +151,29 @@
         </select>
         <button id="initCourtButton" class="button">コート数決定</button>
       </div>
-      
+
       <div id="courtInfo" class="courts"></div>
     </div>
   </div>
 
-  <center>v2.2.0</center>
+  <center>v2.5.0</center>
 
   <script>
-    /*
-      データ構造:
-      participants = [
-        { name: "Alice", matches: 0, resting: false, isParticipating: true },
-        ...
-      ]
-
-      courts = [
-        { id: "A", status: "空き" or "試合中", players: [p1, p2, p3, p4] },
-        ...
-      ]
-    */
     let participants = [];
     let courts = [];
 
-    // HTMLエレメントの取得
     const nameInput = document.getElementById('nameInput');
     const addButton = document.getElementById('addButton');
     const initCourtButton = document.getElementById('initCourtButton');
     const courtCountSelect = document.getElementById('courtCount');
+
     const courtInfo = document.getElementById('courtInfo');
     const waitingTbody = document.getElementById('waitingTbody');
+    const participantCountCell = document.getElementById('participantCountCell');
+
     const resetMatchesButton = document.getElementById('resetMatchesButton');
+    const clearAllButton = document.getElementById('clearAllButton');
+    const deleteAllButton = document.getElementById('deleteAllButton');
 
     //-------------------------------------------------------
     // LocalStorage 保存・読込
@@ -236,7 +265,7 @@
       updateDisplay();
     });
 
-    // 試合回数リセット
+    // 試合回数をリセット
     resetMatchesButton.addEventListener('click', () => {
       if (!confirm("全員の試合回数をリセットします。よろしいですか？")) return;
       participants.forEach(p => p.matches = 0);
@@ -245,61 +274,135 @@
       alert("全員の試合回数をリセットしました。");
     });
 
+    // 全てクリア (全員の isParticipating をfalseにする)
+    clearAllButton.addEventListener('click', () => {
+      if (!confirm("全ての参加チェックを外しますか？")) return;
+      participants.forEach(p => {
+        if (!p.resting) {
+          p.isParticipating = false;
+        }
+      });
+      saveState();
+      updateDisplay();
+    });
+
+    // 全て削除 (ローカルDBを完全削除)
+    deleteAllButton.addEventListener('click', () => {
+      if (!confirm("すべてのデータを削除し、初期状態に戻しますか？")) return;
+      localStorage.removeItem("guremon_participants");
+      localStorage.removeItem("guremon_courts");
+      participants = [];
+      courts = [];
+      updateDisplay();
+      alert("すべてのデータを削除しました。");
+    });
+
+    //-------------------------------------------------------
+    // マイナス/プラスボタンで試合回数を直接調整
+    //-------------------------------------------------------
+    window.decreaseMatches = function(name) {
+      const player = participants.find(p => p.name === name && !p.resting);
+      if (!player) return;
+      if (player.matches > 0) {
+        player.matches--;
+        saveState();
+        updateDisplay();
+      }
+    };
+
+    window.increaseMatches = function(name) {
+      const player = participants.find(p => p.name === name && !p.resting);
+      if (!player) return;
+      player.matches++;
+      saveState();
+      updateDisplay();
+    };
+
     //-------------------------------------------------------
     // 画面表示を更新
     //-------------------------------------------------------
     function updateDisplay() {
-      // 待ちリスト（テーブル）表示
+      // 待ちリスト（resting=false の人）
+      const waitingList = participants.filter(p => p.resting === false);
+
       waitingTbody.innerHTML = "";
-      participants
-        .filter(p => p.resting === false)
-        .forEach(p => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${p.name}</td>
-            <td>${p.matches}</td>
-            <td>
-              <input type="checkbox"
-                ${p.isParticipating ? 'checked' : ''}
-                onchange="toggleParticipation('${p.name}')">
-            </td>
-            <td>
-              <button class="delete-button" onclick="deleteParticipant('${p.name}')">削除</button>
-            </td>
-          `;
-          waitingTbody.appendChild(tr);
-        });
+      waitingList.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${p.name}</td>
+          <td>
+            <!-- -ボタン +ボタン -->
+            <button onclick="decreaseMatches('${p.name}')">-</button>
+            ${p.matches}
+            <button onclick="increaseMatches('${p.name}')">+</button>
+          </td>
+          <td>
+            <input type="checkbox"
+              ${p.isParticipating ? 'checked' : ''}
+              onchange="toggleParticipation('${p.name}')">
+          </td>
+          <td>
+            <button class="delete-button" onclick="deleteParticipant('${p.name}')">削除</button>
+          </td>
+        `;
+        waitingTbody.appendChild(tr);
+      });
+
+      // 参加者 X名 (参加チェック ON の人のみカウント)
+      const countParticipating = waitingList.filter(p => p.isParticipating).length;
+      participantCountCell.textContent = `参加者 ${countParticipating}名`;
 
       // コート表示
       courtInfo.innerHTML = "";
       courts.forEach(court => {
         const div = document.createElement('div');
-        div.className = `court ${court.status === '空き' ? 'empty' : 'occupied'}`;
+        const isEmpty = (court.status === '空き');
+        div.className = `court ${isEmpty ? 'empty' : 'occupied'}`;
 
-        if (court.status === '空き') {
+        if (isEmpty) {
+          // 空きコート
           div.innerHTML = `
-            コート${court.id}　空き
-            <br>
-            <button onclick="startMatch('${court.id}')">試合開始</button>
+            <div class="court-name">コート${court.id}</div>
+            <div class="court-players">空き</div>
+            <div>
+              <button onclick="startMatch('${court.id}')" class="button-large">試合開始</button>
+            </div>
           `;
         } else {
-          let displayText = "";
+          let playersDisplay = "";
           if (court.players.length === 4) {
+            // 「試合中」の人は matches+1 で表示
             const [p1, p2, p3, p4] = court.players;
-            /* 
-               match-display クラスを付けてフォントサイズUP 
-               [p1,p2 vs p3,p4]の形式で表示 
-            */
-            displayText = `<span class="match-display">${p1.name}, ${p2.name} vs ${p3.name}, ${p4.name}</span>`;
+
+            // 1人あたり「名前(マッチ数+1)」
+            const p1Disp = `${p1.name}(${p1.matches + 1})`;
+            const p2Disp = `${p2.name}(${p2.matches + 1})`;
+            const p3Disp = `${p3.name}(${p3.matches + 1})`;
+            const p4Disp = `${p4.name}(${p4.matches + 1})`;
+
+            // 2×2レイアウト
+            playersDisplay = `
+              <table style="margin:auto; border-collapse:collapse;">
+                <tr>
+                  <td align=left>${p1Disp}<br>${p2Disp}</td>
+                  <td>　vs　</td>
+                  <td align=left>　${p3Disp}<br>　${p4Disp}</td>
+                </tr>
+              </table>
+            `;
           } else {
             // 4人以外ならカンマ区切り
-            displayText = court.players.map(p => p.name).join(", ");
+            // もちろん試合中なので matches+1 で表示
+            const dispArr = court.players.map(p => `${p.name}(${p.matches + 1})`);
+            playersDisplay = dispArr.join(", ");
           }
           div.innerHTML = `
-            コート${court.id}　${displayText}
-            <br>
-            <button onclick="endMatch('${court.id}')">試合終了</button>
-            <button onclick="cancelMatch('${court.id}')">試合中止</button>
+            <div class="court-name">コート${court.id}</div>
+            <div class="court-players">${playersDisplay}</div>
+            <div>
+              <button onclick="endMatch('${court.id}')" class="button-large">試合終了</button>
+              <button onclick="cancelMatch('${court.id}')" class="button-large">試合中止</button>
+            </div>
           `;
         }
         courtInfo.appendChild(div);
@@ -320,7 +423,8 @@
 
     window.deleteParticipant = function(name) {
       if (!confirm(`${name} を削除しますか？`)) return;
-      const idx = participants.findIndex(p => p.name === name);
+      // resting=false の人だけ対象
+      const idx = participants.findIndex(p => p.name === name && p.resting === false);
       if (idx >= 0) {
         participants.splice(idx, 1);
         saveState();
@@ -328,65 +432,75 @@
       }
     };
 
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const r = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[r]] = [arr[r], arr[i]];
+      }
+    }
 
-	window.startMatch = function(courtId) {
-		const court = courts.find(c => c.id === courtId);
-		if (!court || court.status !== '空き') return;
-		
-		// 参加可能なプレイヤー
-		const validPlayers = participants.filter(p => p.isParticipating && !p.resting);
-		if (validPlayers.length < 4) {
-			alert("参加可能な人が4人未満です。");
-			return;
-		}
-		
-		// 全員を試合回数が小さい順にソート
-		const sorted = [...validPlayers].sort((a, b) => a.matches - b.matches);
-		
-		// 最小試合回数を取得
-		const minMatches = sorted[0].matches;
-		// 試合回数が minMatches の人だけを抽出
-		const sameGroup = sorted.filter(p => p.matches === minMatches);
-		
-		// もし sameGroup が4名未満なら、次に少ない試合回数の人も追加していく、などのロジックも可能
-		// 今回は「同じ最小試合回数が4人以上いるならそこから抽選する」例として実装
-		if (sameGroup.length < 4) {
-			// sameGroupが4人に満たない場合、次の試合回数グループを追加
-			let need = 4 - sameGroup.length;
-			let index = sameGroup.length;
-			// 同じ minMatches が終わった後の要素(= 次に多い match)を追加
-			for (let i = 0; i < sorted.length && need > 0; i++) {
-				// already in sameGroup はスキップ
-				if (!sameGroup.includes(sorted[i])) {
-					sameGroup.push(sorted[i]);
-					need--;
-				}
-			}
-		}
-		
-		// 同じ試合回数が8人など多数いた場合でもシャッフルして4人を選ぶ
-		shuffleArray(sameGroup);
-		
-		// 先頭4人を選ぶ
-		const selected = sameGroup.slice(0, 4);
-		
-		// コートに入る
-		selected.forEach(p => p.resting = true);
-		court.status = "試合中";
-		court.players = selected;
-		
-		saveState();
-		updateDisplay();
-	};
-	
-	// フィッシャー–イェーツのシャッフル例
-	function shuffleArray(array) {
-		for (let i = array.length - 1; i > 0; i--) {
-			const r = Math.floor(Math.random() * (i + 1));
-			[array[i], array[r]] = [array[r], array[i]];
-		}
-	}
+    // 試合開始
+    window.startMatch = function(courtId) {
+      const court = courts.find(c => c.id === courtId);
+      if (!court || court.status !== '空き') return;
 
+      const validPlayers = participants.filter(p => p.isParticipating && !p.resting);
+      if (validPlayers.length < 4) {
+        alert("参加可能な人が4人未満です。");
+        return;
+      }
+
+  // 試合回数が少ない順にソート
+  const sorted = [...validPlayers].sort((a, b) => a.matches - b.matches);
+
+  // 最小の試合回数
+  let X = sorted[0].matches;
+  // 残り必要人数
+  let need = 4;
+  // 最終的に選ばれる人
+  const selected = [];
+
+  // 反復しながら4人になるまで選ぶ
+  while (need > 0) {
+    // グループXを取得
+    const groupX = sorted.filter(p => p.matches === X);
+    if (groupX.length === 0) {
+      // この試合回数Xの人がいない場合は次へ
+      X++;
+      // もし全ての人を見てもいないなら中断
+      // (理論上はvalidPlayers.length>=4なのでここには来ない想定)
+      if (X > sorted[sorted.length - 1].matches) {
+        alert("人数が足りません。");
+        return;
+      }
+      continue;
+    }
+
+    // グループXをシャッフル
+    shuffleArray(groupX);
+
+    if (groupX.length >= need) {
+      // グループXから必要数(need)だけ抜き取る
+      selected.push(...groupX.slice(0, need));
+      need = 0; // もう4人に達した
+    } else {
+      // グループXの人数が足りないので、全員を選んで次へ
+      selected.push(...groupX);
+      need -= groupX.length;
+      X++; // 次の試合回数を探しに行く
+    }
+  }
+
+  // selectedには 4名が入っている
+      selected.forEach(p => p.resting = true);
+      court.status = "試合中";
+      court.players = selected;
+
+      saveState();
+      updateDisplay();
+    };
+
+    // 試合終了
     window.endMatch = function(courtId) {
       const court = courts.find(c => c.id === courtId);
       if (!court || court.status !== '試合中') return;
@@ -404,6 +518,7 @@
       updateDisplay();
     };
 
+    // 試合中止
     window.cancelMatch = function(courtId) {
       const court = courts.find(c => c.id === courtId);
       if (!court || court.status !== '試合中') return;
@@ -421,7 +536,7 @@
     };
 
     // ページ離脱警告
-    window.addEventListener("beforeunload", event => {
+    window.addEventListener('beforeunload', event => {
       const message = "このページを離れようとしています。変更内容が失われる可能性があります。";
       event.returnValue = message;
       return message;
