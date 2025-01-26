@@ -352,7 +352,7 @@
 
       // 参加者 X名 (参加チェック ON の人のみカウント)
       const countParticipating = waitingList.filter(p => p.isParticipating).length;
-      participantCountCell.textContent = `参加者 ${countParticipating}名`;
+      participantCountCell.textContent = `待ち${countParticipating}名`;
 
       // コート表示
       courtInfo.innerHTML = "";
