@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Apps Script テスト用</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    button { font-size: 16px; padding: 8px 12px; margin: 5px; }
+    textarea { width: 100%; height: 300px; }
+  </style>
+</head>
+<body>
+  <h2>Apps Script テスト用ページ</h2>
+  
+  <div>
+    <button id="loadBtn">状態を読み込む (GET)</button>
+    <button id="saveBtn">テスト状態を保存 (POST)</button>
+    <button id="deleteBtn">全データ削除 (DELETE)</button>
+  </div>
+  
+  <h3>レスポンス：</h3>
+  <textarea id="output" readonly></textarea>
+  
+  <script>
+    // ご自身のApps ScriptのデプロイURLに置き換えてください
+    const API_URL = "https://script.google.com/macros/s/AKfycbyth2dulEVI8HUqybwFPktZOJn52b8WdrdRJp3OaAUyt-wIB3OckBEI2K4GuUdcoiYm8g/exec"
+	
+    const outputArea = document.getElementById("output");
+    
+    // GETテスト
+    document.getElementById("loadBtn").addEventListener("click", () => {
+      fetch(API_URL)
+        .then(response => response.json())
+        .then(data => {
+          outputArea.value = JSON.stringify(data, null, 2);
+        })
+        .catch(err => {
+          outputArea.value = "GETエラー: " + err;
+        });
+    });
+    
+    // POSTテスト：サンプルデータを送信
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      // サンプル状態データ。実際は participants と courts の配列を含む
+      const sampleState = {
+        participants: [
+          { name: "Alice", matches: 0, resting: false, isParticipating: true },
+          { name: "Bob", matches: 1, resting: false, isParticipating: true }
+        ],
+        courts: [
+          { id: "A", status: "空き", playerNames: [] }
+        ]
+      };
+      fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sampleState)
+      })
+      .then(response => response.text())
+      .then(text => {
+        outputArea.value = "POSTレスポンス:\n" + text;
+      })
+      .catch(err => {
+        outputArea.value = "POSTエラー: " + err;
+      });
+    });
+    
+    // DELETEテスト
+    document.getElementById("deleteBtn").addEventListener("click", () => {
+      fetch(API_URL, {
+        method: "DELETE"
+      })
+      .then(response => response.text())
+      .then(text => {
+        outputArea.value = "DELETEレスポンス:\n" + text;
+      })
+      .catch(err => {
+        outputArea.value = "DELETEエラー: " + err;
+      });
+    });
+  </script>
+</body>
+</html>
