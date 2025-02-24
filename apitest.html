@@ -11,27 +11,22 @@
 </head>
 <body>
   <h2>POSTテスト用ページ</h2>
-  <button id="postBtn">POSTテストを実行</button>
+  <button id="postBtn">POSTテスト実行</button>
   <h3>レスポンス：</h3>
-  <textarea id="output" readonly></textarea>
+  <textarea id="result" readonly></textarea>
   
   <script>
-    const outputArea = document.getElementById("output");
-    // ご自身のApps ScriptデプロイURLに置き換えてください
-    const API_URL = "https://script.google.com/macros/s/AKfycby-MtmXHlDJDrpVg1SuA7AW05iFXcQkIBw6It3aj1ZFqYA6aM4DRZaEwchO8imYmJKM4w/exec"
+    const API_URL = "https://script.google.com/macros/s/AKfycby-MtmXHlDJDrpVg1SuA7AW05iFXcQkIBw6It3aj1ZFqYA6aM4DRZaEwchO8imYmJKM4w/exec";
+    const resultArea = document.getElementById("result");
     
     document.getElementById("postBtn").addEventListener("click", () => {
       // サンプル状態データ
       const sampleState = {
         participants: [
           { name: "Alice", matches: 0, resting: true, isParticipating: false },
-          { name: "Bob", matches: 1, resting: false, isParticipating: true },
-          { name: "Charlie", matches: 2, resting: false, isParticipating: true }
+          { name: "Bob", matches: 1, resting: false, isParticipating: true }
         ],
-        courts: [
-          { id: "A", status: "空き", playerNames: [] },
-          { id: "B", status: "試合中", playerNames: ["Alice", "Bob"] }
-        ]
+        courts: []  // コートデータは今回は空にしておく
       };
       
       fetch(API_URL, {
@@ -41,10 +36,10 @@
       })
       .then(response => response.text())
       .then(text => {
-        outputArea.value = "POSTレスポンス:\n" + text;
+        resultArea.value = "POSTレスポンス:\n" + text;
       })
       .catch(err => {
-        outputArea.value = "POSTエラー: " + err;
+        resultArea.value = "POSTエラー: " + err;
       });
     });
   </script>
