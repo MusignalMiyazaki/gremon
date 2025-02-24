@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>Apps Script テスト用 (JSONP)</title>
+  <title>Apps Script テスト用 (JSONP対応)</title>
   <style>
     body { font-family: sans-serif; margin: 20px; }
     button { font-size: 16px; padding: 8px 12px; margin: 5px; }
@@ -15,6 +15,7 @@
   <div>
     <button id="jsonpGetBtn">GETテスト (JSONP)</button>
     <button id="postBtn">POSTテスト実行</button>
+    <button id="deleteBtn">DELETEテスト実行</button>
   </div>
   
   <h3>レスポンス：</h3>
@@ -22,24 +23,20 @@
   
   <script>
     const outputArea = document.getElementById("output");
-    // ご自身のApps ScriptデプロイURLに置き換えてください
-    const API_URL = "https://script.google.com/macros/s/AKfycbyOxmOGeAiql7b7k7mLBzpSYjsOLPGbBktaioYaPaWeOs-5gacXlQ1WaGa3t0dYkDal1A/exec";
-	
-    // JSONP GET テスト：URL に callback パラメータを付ける
+    // ※ ご自身のApps ScriptデプロイURLに置き換えてください
+    const API_URL = "https://script.google.com/macros/s/AKfycby_sXHpHbFrNsIZwEH8qhNgO9-CFZPDrg7yoib_xkRGPsUmeTHlDhld1lGhXQp6yTrqVw/exec";
+    
+    // JSONP GETテスト
     document.getElementById("jsonpGetBtn").addEventListener("click", () => {
-      // コールバック関数名を指定
       const callbackName = "handleData";
-      // JSONP用のスクリプトタグを動的に作成
       const script = document.createElement("script");
       script.src = API_URL + "?callback=" + callbackName;
-      // 既存のスクリプトタグがあれば削除
       const oldScript = document.getElementById("jsonpScript");
       if (oldScript) { oldScript.parentNode.removeChild(oldScript); }
       script.id = "jsonpScript";
       document.body.appendChild(script);
     });
     
-    // JSONP用のコールバック関数
     function handleData(data) {
       outputArea.value = "GETレスポンス (JSONP):\n" + JSON.stringify(data, null, 2);
     }
@@ -70,6 +67,18 @@
       .catch(err => {
         outputArea.value = "POSTエラー: " + err;
       });
+    });
+    
+    // DELETEテスト
+    document.getElementById("deleteBtn").addEventListener("click", () => {
+      fetch(API_URL, { method: "DELETE" })
+        .then(response => response.text())
+        .then(text => {
+          outputArea.value = "DELETEレスポンス:\n" + text;
+        })
+        .catch(err => {
+          outputArea.value = "DELETEエラー: " + err;
+        });
     });
   </script>
 </body>
