@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>POSTテスト用</title>
+  <title>Apps Script テスト用 (JSONP)</title>
   <style>
     body { font-family: sans-serif; margin: 20px; }
     button { font-size: 16px; padding: 8px 12px; margin: 5px; }
@@ -10,23 +10,52 @@
   </style>
 </head>
 <body>
-  <h2>POSTテスト用ページ</h2>
-  <button id="postBtn">POSTテスト実行</button>
+  <h2>Apps Script テスト用 (JSONP対応)</h2>
+  
+  <div>
+    <button id="jsonpGetBtn">GETテスト (JSONP)</button>
+    <button id="postBtn">POSTテスト実行</button>
+  </div>
+  
   <h3>レスポンス：</h3>
-  <textarea id="result" readonly></textarea>
+  <textarea id="output" readonly></textarea>
   
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycby-MtmXHlDJDrpVg1SuA7AW05iFXcQkIBw6It3aj1ZFqYA6aM4DRZaEwchO8imYmJKM4w/exec";
-    const resultArea = document.getElementById("result");
+    const outputArea = document.getElementById("output");
+    // ご自身のApps ScriptデプロイURLに置き換えてください
+    const API_URL = "https://script.google.com/macros/s/AKfycbyOxmOGeAiql7b7k7mLBzpSYjsOLPGbBktaioYaPaWeOs-5gacXlQ1WaGa3t0dYkDal1A/exec";
+	
+    // JSONP GET テスト：URL に callback パラメータを付ける
+    document.getElementById("jsonpGetBtn").addEventListener("click", () => {
+      // コールバック関数名を指定
+      const callbackName = "handleData";
+      // JSONP用のスクリプトタグを動的に作成
+      const script = document.createElement("script");
+      script.src = API_URL + "?callback=" + callbackName;
+      // 既存のスクリプトタグがあれば削除
+      const oldScript = document.getElementById("jsonpScript");
+      if (oldScript) { oldScript.parentNode.removeChild(oldScript); }
+      script.id = "jsonpScript";
+      document.body.appendChild(script);
+    });
     
+    // JSONP用のコールバック関数
+    function handleData(data) {
+      outputArea.value = "GETレスポンス (JSONP):\n" + JSON.stringify(data, null, 2);
+    }
+    
+    // POSTテスト
     document.getElementById("postBtn").addEventListener("click", () => {
-      // サンプル状態データ
       const sampleState = {
         participants: [
           { name: "Alice", matches: 0, resting: true, isParticipating: false },
-          { name: "Bob", matches: 1, resting: false, isParticipating: true }
+          { name: "Bob", matches: 1, resting: false, isParticipating: true },
+          { name: "Charlie", matches: 2, resting: false, isParticipating: true }
         ],
-        courts: []  // コートデータは今回は空にしておく
+        courts: [
+          { id: "A", status: "空き", playerNames: [] },
+          { id: "B", status: "試合中", playerNames: ["Alice", "Bob"] }
+        ]
       };
       
       fetch(API_URL, {
@@ -36,10 +65,10 @@
       })
       .then(response => response.text())
       .then(text => {
-        resultArea.value = "POSTレスポンス:\n" + text;
+        outputArea.value = "POSTレスポンス:\n" + text;
       })
       .catch(err => {
-        resultArea.value = "POSTエラー: " + err;
+        outputArea.value = "POSTエラー: " + err;
       });
     });
   </script>
